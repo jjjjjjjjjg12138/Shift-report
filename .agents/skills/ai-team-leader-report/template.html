@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Team Leader - Shift Report</title>
+    <!-- Bosch Brand Guidelines injected here -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Placeholder for Bosch specific typography and colors */
+        :root { --bosch-blue: #005691; --bosch-light-blue: #008ECF; }
+        body { font-family: 'Bosch Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 p-8">
+    <div class="max-w-5xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+        <header class="bg-[#005691] text-white p-6">
+            <h1 class="text-2xl font-bold">Team Leader Shift Report</h1>
+            <p class="text-sm opacity-80" id="report-date-range">Last 3 Days Overview</p>
+        </header>
+        
+        <div class="p-6 border-b border-gray-200 bg-gray-50 flex items-center gap-4">
+            <label for="shift-slider" class="font-semibold whitespace-nowrap">Select Time/Shift:</label>
+            <input type="range" id="shift-slider" min="0" max="0" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+            <span id="slider-label" class="font-bold text-[#008ECF] min-w-[120px]"></span>
+        </div>
+
+        <main class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6" id="dashboard-content">
+            <!-- Data will be rendered here by JS -->
+        </main>
+    </div>
+
+    <script>
+        // Data injected by the AI Agent during generation
+        const reportData = /* INJECT_DATA_HERE */ []; 
+        
+        const slider = document.getElementById('shift-slider');
+        const sliderLabel = document.getElementById('slider-label');
+        const content = document.getElementById('dashboard-content');
+
+        if (reportData && reportData.length > 0) {
+            slider.max = reportData.length - 1;
+            slider.value = reportData.length - 1; // Default to latest
+            
+            function renderShift(index) {
+                const data = reportData[index];
+                sliderLabel.textContent = data.shiftName;
+                
+                content.innerHTML = `
+                    <div class="bg-blue-50 p-4 rounded border border-blue-100 shadow-sm">
+                        <h2 class="text-xl font-bold text-[#005691] mb-2">KPIs</h2>
+                        <div class="space-y-2">
+                            <p class="text-lg"><strong>OEE:</strong> <span class="text-blue-700 font-bold">${data.oee}%</span></p>
+                            <p class="text-lg"><strong>Output:</strong> <span class="text-blue-700 font-bold">${data.output}</span> pcs</p>
+                            <p class="text-lg"><strong>Scrap Rate:</strong> <span class="text-red-600 font-bold">${data.scrapRate}%</span></p>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded border border-gray-200 shadow-sm">
+                        <h2 class="text-xl font-bold text-gray-700 mb-2">Logbook Events</h2>
+                        <ul class="list-disc pl-5 space-y-1 text-gray-600">
+                            ${data.events && data.events.length > 0 
+                                ? data.events.map(e => `<li>${e}</li>`).join('') 
+                                : '<li>No significant events recorded.</li>'}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            slider.addEventListener('input', (e) => renderShift(e.target.value));
+            renderShift(slider.value);
+        } else {
+            content.innerHTML = '<div class="col-span-2 text-center py-10"><p class="text-red-500 text-xl font-bold">No production data available for the selected period.</p></div>';
+        }
+    </script>
+</body>
+</html>
