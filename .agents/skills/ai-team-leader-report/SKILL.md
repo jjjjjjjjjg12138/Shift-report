@@ -1,74 +1,44 @@
 ---
 name: ai-team-leader-report
-description: Generates a professional, interactive Bosch-branded shift report for Team Leaders, specifically aligned with MOE3.2 operational requirements. Features 72-hour interactive window, Loss Pareto analysis, and automated Shift Handover drafts.
-version: 5.0
+description: Generates a professional, interactive Bosch-branded shift report. Features a STICKY REAL-TIME output monitor for the current shift and a 72-hour historical interactive slider for depth analysis and MOE3.2 compliance.
+version: 6.0
 author: Gemini CLI / AI Associate Team
 requirements:
-  - Data Provider: Access to MES PdaMda API (e.g., GetShiftbookData, GetInterruptions endpoints)
+  - Data Provider: Access to MES PdaMda API (Shiftbook & Interruption endpoints)
   - Design Tokens: Bosch brand guidelines (fonts: Bosch Sans, colors: Bosch Blue #005691)
 ---
 
-# AI Team Leader Report Generator (v5.0 MOE3.2 Aligned)
+# AI Team Leader Report Generator (v6.0 Live & Historical)
 
 ## Overview
-This skill guides any AI agent to orchestrate the creation of a shift analysis dashboard that directly fulfills MOE3.2 tasks: OEE/Output loss identification (#1, #2), FPY registration (#9), and automated Handover Log generation (#8).
+This skill orchestrates a "Single Pane of Glass" dashboard. It places the **Live Production Pulse** of the ongoing shift at the top (sticky), while providing a scrollable **Historical Archive** for the past 3 days below.
 
-## 1. Mathematical Standards (MOE3.2 & Bosch)
-- **Total Parts Produced**: `CountIO + CountNIOSum`
-- **FPY (First Pass Yield) %**: `(CountIO / Total Parts Produced) * 100` (MOE3.2 #9)
-- **Scrap Rate %**: `(CountScrap / Total Parts Produced) * 100`
-- **Performance %**: `(CountIO / CountTargetOee100) * 100` (MOE3.2 #1)
+## 1. Mathematical Standards
+- **Total Produced**: `CountIO + CountNIOSum`
+- **FPY %**: `(CountIO / Total Produced) * 100`
+- **OEE / Performance %**: `(CountIO / CountTargetOee100) * 100`
 
 ## 2. Execution Protocol
 
-### Step A: Data Discovery
-1.  **Retrieve History**: Fetch 72 hours of `GetShiftbookData` and `GetInterruptions` for the target line.
-2.  **Identify Last Active Shift**: Locate the most recent data timestamp.
+### Step A: Live Data Discovery (The "Pulse")
+1.  **Determine Current Shift**: Identify if the current time falls into Morning (07-15), Afternoon (15-23), or Night (23-07).
+2.  **Fetch Live KPIs**: Call `GetShiftbookData` for the target line. Set `start` to the *start of the current shift* and `end` to `Now`.
+3.  **Map Live JSON**:
+    ```json
+    { "shiftName": "Current Shift", "output": 123, "oee": 94.5, "target": 150 }
+    ```
 
-### Step B: MOE3.2 Deep Analysis & Verification
-1.  **Loss Pareto Analysis (MOE3.2 #1 & #2)**:
-    - Aggregate all interruptions by `TypeText`.
-    - Rank top 3 causes by total duration (min).
-    - Identify if the losses are Technical, Organizational, or Changeover.
-2.  **Shift Handover Generation (MOE3.2 #8)**:
-    - Summarize the shift status into a concise "TL-to-TL" message.
-    - Include: Total Output vs. Target, major quality issues (FPY), and significant equipment events.
-3.  **Precision Check**: Ensure the sum of part types equals the shift total output.
+### Step B: Historical Data Discovery (The "Archive")
+1.  **Fetch History**: Fetch 72 hours of `GetShiftbookData` and `GetInterruptions`.
+2.  **Aggregate**: Group by shift and calculate FPY, OEE, and Loss Pareto (Top 3 reasons).
+3.  **Draft Handover**: Generate a 3-bullet point summary for each historical shift.
 
-### Step C: JSON Schema Mapping
-```json
-[
-  {
-    "shiftName": "YYYY-MM-DD (Morning|Afternoon|Night)",
-    "verificationStatus": "Verified by AI | Data Anomaly",
-    "oee": "float",
-    "oeeTarget": "float",
-    "fpy": "float",
-    "output": "integer",
-    "scrapRate": "float",
-    "lossPareto": [
-      { "reason": "TypeText", "duration": "integer", "class": "Tech|Org|CO" }
-    ],
-    "handoverDraft": "A 3-bullet point summary for the TL handover log.",
-    "partTypes": [
-      { "name": "Part Number", "io": "integer", "nio": "integer", "fpy": "float" }
-    ],
-    "interruptions": [
-      { "type": "String", "duration": "integer", "desc": "String" }
-    ],
-    "actions": [
-      { "deviation": "String", "reaction": "String", "owner": "String" }
-    ]
-  }
-]
-```
-
-### Step D: UI Assembly
-1.  **Read** the `template.html` asset from this skill's directory.
-2.  **Write** the final report:
-    - Replace `/* INJECT_DATA_HERE */ []` with the MOE3.2 enriched JSON.
-    - Save to `product/shift-report-moe32-v5.html`.
+### Step C: UI Assembly
+1.  **Read** the `template.html` asset.
+2.  **Inject Live Data**: Replace `/* INJECT_LIVE_HERE */ null` with your live JSON object.
+3.  **Inject Historical Data**: Replace `/* INJECT_DATA_HERE */ []` with your historical JSON array.
+4.  **Write**: Save to `product/shift-report-live-v6.html`.
 
 ## 3. Completion
-- State the "Top 1 Loss Reason" identified for the latest shift.
-- Confirm the handover draft is ready for the Team Leader.
+- Confirm the live output and OEE values captured.
+- Provide the file path to the user.
