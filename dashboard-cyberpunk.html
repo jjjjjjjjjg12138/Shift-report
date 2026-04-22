@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI SUPERVISOR TERMINAL v2.0 // INDUSTRIAL_CYBERPUNK</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #070a0e;
+            --cyan: #00f3ff;
+            --orange: #ff6b00;
+            --red: #ff3300;
+            --green: #00ff66;
+            --gray: #1a1f26;
+            --text-glow: 0 0 10px rgba(0, 243, 255, 0.4);
+            --neon-border: 1px solid rgba(0, 243, 255, 0.3);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #d1d9e1;
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .neon-text-cyan { color: var(--cyan); text-shadow: var(--text-glow); }
+        .neon-text-orange { color: var(--orange); text-shadow: 0 0 10px rgba(255, 107, 0, 0.4); }
+        .neon-text-red { color: var(--red); text-shadow: 0 0 10px rgba(255, 51, 0, 0.4); }
+        .neon-text-green { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 102, 0.4); }
+
+        .border-neon { border: var(--neon-border); box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.1); }
+        .border-neon-orange { border: 1px solid rgba(255, 107, 0, 0.3); box-shadow: inset 0 0 10px rgba(255, 107, 0, 0.1); }
+
+        .kpi-value { font-size: 3.5rem; font-weight: 900; line-height: 1; margin: 1rem 0; }
+        
+        .scanline {
+            width: 100%; height: 100px; z-index: 100;
+            background: linear-gradient(0deg, rgba(0, 243, 255, 0) 0%, rgba(0, 243, 255, 0.05) 50%, rgba(0, 243, 255, 0) 100%);
+            opacity: 0.1; position: fixed; bottom: 100%; animation: scanline 8s linear infinite; pointer-events: none;
+        }
+
+        @keyframes scanline { 0% { bottom: 100%; } 80% { bottom: 0%; } 100% { bottom: 0%; } }
+
+        .glitch-reveal {
+            animation: glitchReveal 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        @keyframes glitchReveal {
+            0% { opacity: 0; transform: translateX(-10px); filter: blur(10px); }
+            50% { opacity: 0.5; filter: blur(5px); transform: translateX(5px); }
+            100% { opacity: 1; transform: translateX(0); filter: blur(0); }
+        }
+
+        .bar-segment { height: 100%; transition: width 1s ease-out; }
+        .terminal-scroll::-webkit-scrollbar { width: 4px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: var(--bg); }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: var(--cyan); }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: auto auto auto;
+            gap: 1.5rem;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .cell { background: rgba(10, 14, 20, 0.8); padding: 1.5rem; position: relative; overflow: hidden; }
+        .cell::after {
+            content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 4px; background: var(--cyan);
+        }
+        .cell-header { font-size: 0.75rem; color: #6e7a89; border-bottom: 1px solid #1e2631; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="scanline"></div>
+
+    <!-- Header Terminal Info -->
+    <header class="p-6 border-b border-gray-800 flex justify-between items-end">
+        <div>
+            <div class="text-xs text-gray-500 mb-1">SYSTEM_ACCESS_GRANTED // PORT: 8004</div>
+            <h1 class="text-2xl neon-text-cyan">AI_SUPERVISOR_TERMINAL_v2.0</h1>
+        </div>
+        <div class="text-right">
+            <div class="text-xs text-gray-500">SHIFT: NIGHT_APR16 // LINE: L1092</div>
+            <div class="text-sm font-bold neon-text-green" id="clock">STATUS: ACTIVE_MONITORING</div>
+        </div>
+    </header>
+
+    <div class="grid-layout">
+        
+        <!-- OEE Main KPI (Span 4) -->
+        <div class="cell col-span-12 lg:col-span-4 border-neon glitch-reveal" style="animation-delay: 0.1s;">
+            <div class="cell-header">OVERALL_EQUIPMENT_EFFECTIVENESS</div>
+            <div class="flex items-baseline justify-between">
+                <div class="kpi-value neon-text-cyan">78.4<span class="text-2xl font-normal opacity-60">%</span></div>
+                <div class="text-sm text-right">
+                    <div class="text-gray-500">TARGET</div>
+                    <div class="font-bold">85.0%</div>
+                </div>
+            </div>
+            <!-- Loss Waterfall -->
+            <div class="mt-6 space-y-3">
+                <div class="text-[0.6rem] text-gray-400 flex justify-between">
+                    <span>OEE_LOSS_DISTRIBUTION</span>
+                    <span class="neon-text-orange">-6.6% VARIANCE</span>
+                </div>
+                <div class="h-4 bg-gray-900 border border-gray-800 flex overflow-hidden">
+                    <div class="bar-segment" style="width: 78.4%; background: var(--cyan); box-shadow: 0 0 10px rgba(0, 243, 255, 0.5);"></div>
+                    <div class="bar-segment" style="width: 12.2%; background: #4a5568;"></div> <!-- Organizational -->
+                    <div class="bar-segment" style="width: 3.0%; background: #2d3748;"></div> <!-- Changeover -->
+                    <div class="bar-segment" style="width: 6.4%; background: var(--red);"></div> <!-- Performance/Tech/Quality -->
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-[0.65rem]">
+                    <div class="flex justify-between items-center"><span class="text-gray-500">ORG_LOSS:</span> <span class="neon-text-cyan">12.2%</span></div>
+                    <div class="flex justify-between items-center"><span class="text-gray-500">PERF_LOSS:</span> <span class="neon-text-orange">2.0%</span></div>
+                    <div class="flex justify-between items-center"><span class="text-gray-500">TECH_LOSS:</span> <span class="neon-text-orange">1.4%</span></div>
+                    <div class="flex justify-between items-center"><span class="text-gray-500">QUAL_LOSS:</span> <span class="neon-text-orange">1.3%</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output & Productivity (Span 5) -->
+        <div class="cell col-span-12 lg:col-span-5 border-neon glitch-reveal" style="animation-delay: 0.2s;">
+            <div class="cell-header">PRODUCTION_METRICS_REALTIME</div>
+            <div class="grid grid-cols-2 gap-8 h-full items-center">
+                <div>
+                    <div class="text-[0.6rem] text-gray-500">OUTPUT_ACTUAL_VS_TARGET</div>
+                    <div class="kpi-value neon-text-orange">842 <span class="text-xl opacity-40">/ 950</span></div>
+                    <div class="h-1 bg-gray-900 w-full mt-2">
+                        <div class="h-full bg-orange-600 shadow-[0_0_8px_rgba(234,88,12,0.6)]" style="width: 88.6%"></div>
+                    </div>
+                </div>
+                <div class="border-l border-gray-800 pl-8">
+                    <div class="text-[0.6rem] text-gray-500">FPY_STABILITY</div>
+                    <div class="kpi-value neon-text-green">98.7<span class="text-xl opacity-60">%</span></div>
+                    <div class="text-[0.65rem] text-gray-400 mt-2">SCRAP_COUNT: <span class="neon-text-red">12_UNITS</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Mini Cell (Span 3) -->
+        <div class="cell col-span-12 lg:col-span-3 border-neon glitch-reveal" style="animation-delay: 0.3s;">
+            <div class="cell-header">HUMAN_RESOURCE_AVAILABILITY</div>
+            <div class="mt-4">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs">HEADCOUNT</span>
+                    <span class="neon-text-orange">22 / 24</span>
+                </div>
+                <div class="grid grid-cols-12 gap-1">
+                    <!-- Dots for headcount -->
+                    <div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_var(--cyan)]"></div><div class="w-2 h-2 border border-gray-700"></div><div class="w-2 h-2 border border-gray-700"></div>
+                </div>
+                <div class="mt-4 text-[0.65rem] text-gray-500 italic">
+                    >> [2]_ABSENTEE_IDENTIFIED: MFB_STATION_B3, QMM_A1
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Insights & Escalations (Span 8) -->
+        <div class="cell col-span-12 lg:col-span-8 border-neon-orange glitch-reveal" style="animation-delay: 0.4s;">
+            <div class="cell-header">AI_AGENT_REASONING_LOG // ESCALATIONS</div>
+            <div class="terminal-scroll h-64 overflow-y-auto font-mono text-xs leading-relaxed pr-4">
+                <div class="mb-4">
+                    <span class="bg-orange-900 text-orange-200 px-1 mr-2">WARN</span>
+                    <span class="text-gray-500">[02:14:32]</span> MATERIAL_SHORTAGE_DETECTED: SNR_A123_WIRING_HARNESS. 
+                    <div class="ml-16 mt-1 text-orange-400">>> AI RECOMMENDATION: Trigger Level 1 Escalation to Warehouse immediately. Potential downtime in 45 mins.</div>
+                </div>
+                <div class="mb-4">
+                    <span class="bg-cyan-900 text-cyan-200 px-1 mr-2">INFO</span>
+                    <span class="text-gray-500">[03:45:10]</span> OEE_LOSS_ANALYSIS: Organizational loss (12.2%) dominated by unplanned changeover extension.
+                    <div class="ml-16 mt-1 text-cyan-400">>> AI INSIGHT: Staffing gap at Station 4 caused delay. Assigned OPL review to Shift Leader.</div>
+                </div>
+                <div class="mb-4">
+                    <span class="bg-green-900 text-green-200 px-1 mr-2">OKAY</span>
+                    <span class="text-gray-500">[05:12:00]</span> FPY recovery confirmed. Quality spike at Station 2 resolved via parameter recalibration.
+                </div>
+                <div class="mb-4">
+                    <span class="bg-orange-900 text-orange-200 px-1 mr-2">WARN</span>
+                    <span class="text-gray-500">[06:30:45]</span> OUTPUT_GAP: Current trajectory projects 108 unit shortfall.
+                    <div class="ml-16 mt-1 text-orange-400">>> PROPOSED_ACTION: Activate Overtime Protocol or reallocate resources from L1121.</div>
+                </div>
+                <div class="animate-pulse neon-text-cyan">_ SYSTEM_WAITING_FOR_USER_INPUT...</div>
+            </div>
+        </div>
+
+        <!-- Hourly Output Table (Span 4) -->
+        <div class="cell col-span-12 lg:col-span-4 border-neon glitch-reveal" style="animation-delay: 0.5s;">
+            <div class="cell-header">HOURLY_COUNT_MATRIX</div>
+            <table class="w-full text-[0.65rem] border-collapse">
+                <thead>
+                    <tr class="text-gray-500 border-b border-gray-800">
+                        <th class="text-left py-2 font-normal">HOUR</th>
+                        <th class="text-right py-2 font-normal">TARGET</th>
+                        <th class="text-right py-2 font-normal">ACTUAL</th>
+                        <th class="text-right py-2 font-normal">DELTA</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-300">
+                    <tr class="border-b border-gray-900"><td class="py-2">22:00</td><td class="text-right">120</td><td class="text-right">118</td><td class="text-right neon-text-orange">-2</td></tr>
+                    <tr class="border-b border-gray-900"><td class="py-2">23:00</td><td class="text-right">120</td><td class="text-right">122</td><td class="text-right neon-text-green">+2</td></tr>
+                    <tr class="border-b border-gray-900"><td class="py-2">00:00</td><td class="text-right">120</td><td class="text-right">105</td><td class="text-right neon-text-red">-15</td></tr>
+                    <tr class="border-b border-gray-900"><td class="py-2">01:00</td><td class="text-right">120</td><td class="text-right">112</td><td class="text-right neon-text-orange">-8</td></tr>
+                    <tr class="border-b border-gray-900"><td class="py-2">02:00</td><td class="text-right">120</td><td class="text-right">85</td><td class="text-right neon-text-red">-35</td></tr>
+                    <tr class="border-b border-gray-900"><td class="py-2">03:00</td><td class="text-right">120</td><td class="text-right">110</td><td class="text-right neon-text-orange">-10</td></tr>
+                </tbody>
+            </table>
+            <div class="mt-4 flex justify-between items-center">
+                <div class="text-[0.6rem] text-gray-500">TOTAL_ACCUMULATED</div>
+                <div class="text-xs neon-text-orange">-68 UNITS</div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="p-6 text-center text-[0.6rem] text-gray-600 uppercase tracking-widest">
+        ENCRYPTED_DATA_TRANSMISSION // BOSCH_INDUSTRIAL_AI_NET // (c) 2026
+    </footer>
+
+    <script>
+        // Simple clock update
+        function updateClock() {
+            const now = new Date();
+            const time = now.toTimeString().split(' ')[0];
+            document.getElementById('clock').innerHTML = `STATUS: ACTIVE_MONITORING // [${time}]`;
+        }
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
