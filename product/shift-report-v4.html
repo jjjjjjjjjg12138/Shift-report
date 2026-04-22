@@ -1,0 +1,555 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Team Leader - Precision Dashboard v4.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import Chart from 'https://esm.sh/chart.js@4/auto';
+        window.Chart = Chart;
+    </script>
+    <style>
+        @font-face {
+            font-family: "boschsans";
+            font-weight: 400;
+            src: url(https://brandguide-cdn.azureedge.net/fonts/BoschSans-Regular.woff2) format("woff2");
+            font-display: swap;
+        }
+        @font-face {
+            font-family: "boschsans";
+            font-weight: 700;
+            src: url(https://brandguide-cdn.azureedge.net/fonts/BoschSans-Bold.woff2) format("woff2");
+            font-display: swap;
+        }
+        * { font-family: boschsans, "Helvetica Neue", "Microsoft YaHei", Arial, sans-serif; }
+        body { background: #eff1f2; }
+
+        .kpi-card { background:#fff; border-radius:4px; box-shadow:0 1px 2px rgba(16,17,18,.08); position: relative; }
+        .kpi-ok   { border-top: 4px solid #00884a; }
+        .kpi-warn { border-top: 4px solid #ffcf00; }
+        .kpi-bad  { border-top: 4px solid #ed0007; }
+        .kpi-info { border-top: 4px solid #007bc0; }
+
+        .badge-ok   { background:#e2f5e7; color:#00884a; }
+        .badge-warn { background:#ffefd1; color:#b36a00; }
+        .badge-bad  { background:#ffecec; color:#ed0007; }
+        .badge-blue { background:#e8f1ff; color:#007bc0; }
+        .badge-gray { background:#eff1f2; color:#2e3033; }
+
+        .section-title {
+            font-size:.65rem; font-weight:700; letter-spacing:.08em;
+            text-transform:uppercase; color:#71767c; margin-bottom:.75rem;
+        }
+        table { border-collapse:collapse; width:100%; }
+        th { background:#eff1f2; font-size:.72rem; font-weight:700; color:#2e3033;
+             text-align:left; padding:6px 10px; border-bottom:2px solid #d8dadc; }
+        td { font-size:.78rem; padding:6px 10px; border-bottom:1px solid #e8eaeb; color:#2e3033; }
+        tr:last-child td { border-bottom:none; }
+        
+        .slider-container {
+            background: #fff; border-bottom: 1px solid #d8dadc;
+            position: sticky; top: 0; z-index: 50;
+        }
+        .tooltip { visibility: hidden; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; white-space: nowrap; z-index: 100; opacity: 0; transition: opacity 0.2s; }
+        .tooltip-trigger:hover .tooltip { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+
+<!-- â”€â”€ HEADER BANNER â”€â”€ -->
+<div style="background:linear-gradient(90deg,#007bc0 0%,#005f96 40%,#003c6e 100%); height:6px;"></div>
+
+<header style="background:#fff; border-bottom:1px solid #d8dadc;">
+    <div class="max-w-6xl mx-auto px-6 py-5 flex items-start justify-between">
+        <div>
+            <div class="flex items-center gap-3 mb-1">
+                <svg width="52" height="18" viewBox="0 0 52 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="52" height="18" rx="2" fill="#ED0007"/>
+                    <text x="5" y="13.5" font-family="Arial" font-weight="bold" font-size="11" fill="white">BOSCH</text>
+                </svg>
+                <span style="font-size:.7rem;color:#71767c;letter-spacing:.06em;font-weight:700;text-transform:uppercase;">Power Solutions Â· RBCD Â· Precision Assistant v4.0</span>
+            </div>
+            <h1 style="font-size:1.35rem;font-weight:700;color:#101112;line-height:1.2;">
+                Team Leader Shift Analysis
+            </h1>
+            <p style="font-size:.82rem;color:#71767c;margin-top:2px;" id="shift-time-range">
+                Validated production insights with anomaly detection.
+            </p>
+        </div>
+        <div class="text-right" style="font-size:.72rem;color:#71767c;">
+            <div>Verification Status: <span id="v-status" class="font-bold text-[#00884a]">Verified</span></div>
+            <div style="font-weight:700;color:#2e3033;" id="gen-date">2026-04-22</div>
+            <span class="badge-blue inline-block mt-1 px-2 py-0.5 rounded-full" style="font-size:.65rem;font-weight:700;">AI Verified Â· Precision Mode</span>
+        </div>
+    </div>
+</header>
+
+<!-- â”€â”€ INTERACTIVE SLIDER â”€â”€ -->
+<div class="slider-container px-6 py-4 shadow-sm">
+    <div class="max-w-6xl mx-auto flex items-center gap-4">
+        <label for="shift-slider" class="font-bold text-xs uppercase text-gray-500 tracking-wider">Select Shift:</label>
+        <input type="range" id="shift-slider" min="0" max="0" value="0" class="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#007bc0]">
+        <span id="slider-label" class="font-bold text-[#007bc0] min-w-[150px] text-right"></span>
+    </div>
+</div>
+
+<main class="max-w-6xl mx-auto px-6 py-6 space-y-8" id="main-content">
+    <!-- Content rendered by JavaScript -->
+</main>
+
+<footer style="font-size:.68rem;color:#71767c;text-align:center;padding:24px 0;">
+    Internal C â€“ SC1 &nbsp;|&nbsp; Power Solutions &nbsp;|&nbsp; RBCD/MSE1 &nbsp;|&nbsp;
+    Precision Verification v4.0 &nbsp;Â·&nbsp; Data sourced from MES PdaMda
+</footer>
+
+<script>
+    // Data injected by AI Agent
+    const reportData = [
+    {
+        "output":  1401,
+        "oee":  87.54,
+        "interruptions":  [
+
+                          ],
+        "oeeTarget":  95,
+        "shiftName":  "2026-04-21 Night",
+        "scrapRate":  0,
+        "verificationStatus":  "Verified by AI",
+        "fpy":  94.73,
+        "actions":  [
+                        {
+                            "reaction":  "Review shift startup bottleneck station throughput.",
+                            "deviation":  "Performance Low (87.54%)"
+                        },
+                        {
+                            "reaction":  "Verify station 67002 sensor calibration.",
+                            "deviation":  "Quality Low (94.73%)"
+                        }
+                    ],
+        "partTypes":  {
+                          "name":  "0445111326",
+                          "io":  1401,
+                          "nio":  78,
+                          "fpy":  94.73
+                      }
+    },
+    {
+        "output":  2125,
+        "oee":  89.01,
+        "interruptions":  [
+
+                          ],
+        "oeeTarget":  95,
+        "shiftName":  "2026-04-21 Morning",
+        "scrapRate":  0,
+        "verificationStatus":  "Verified by AI",
+        "fpy":  95.85,
+        "actions":  [
+                        {
+                            "reaction":  "Review shift startup bottleneck station throughput.",
+                            "deviation":  "Performance Low (89.01%)"
+                        }
+                    ],
+        "partTypes":  [
+                          {
+                              "name":  "0445111326",
+                              "io":  283,
+                              "nio":  9,
+                              "fpy":  96.92
+                          },
+                          {
+                              "name":  "0445111227",
+                              "io":  285,
+                              "nio":  17,
+                              "fpy":  94.37
+                          },
+                          {
+                              "name":  "0445111442",
+                              "io":  1051,
+                              "nio":  50,
+                              "fpy":  95.46
+                          },
+                          {
+                              "name":  "0445111114",
+                              "io":  506,
+                              "nio":  16,
+                              "fpy":  96.93
+                          }
+                      ]
+    },
+    {
+        "output":  1519,
+        "oee":  84.77,
+        "interruptions":  [
+
+                          ],
+        "oeeTarget":  95,
+        "shiftName":  "2026-04-21 Afternoon",
+        "scrapRate":  0,
+        "verificationStatus":  "Verified by AI",
+        "fpy":  95.24,
+        "actions":  [
+                        {
+                            "reaction":  "Review shift startup bottleneck station throughput.",
+                            "deviation":  "Performance Low (84.77%)"
+                        }
+                    ],
+        "partTypes":  [
+                          {
+                              "name":  "0445111402",
+                              "io":  752,
+                              "nio":  29,
+                              "fpy":  96.29
+                          },
+                          {
+                              "name":  "0445111199",
+                              "io":  767,
+                              "nio":  47,
+                              "fpy":  94.23
+                          }
+                      ]
+    },
+    {
+        "output":  420,
+        "oee":  87.84,
+        "interruptions":  [
+
+                          ],
+        "oeeTarget":  95,
+        "shiftName":  "2026-04-20 Night",
+        "scrapRate":  0,
+        "verificationStatus":  "Verified by AI",
+        "fpy":  95.89,
+        "actions":  [
+                        {
+                            "reaction":  "Review shift startup bottleneck station throughput.",
+                            "deviation":  "Performance Low (87.84%)"
+                        }
+                    ],
+        "partTypes":  [
+                          {
+                              "name":  "0986435332",
+                              "io":  218,
+                              "nio":  9,
+                              "fpy":  96.04
+                          },
+                          {
+                              "name":  "0986435316",
+                              "io":  202,
+                              "nio":  9,
+                              "fpy":  95.73
+                          }
+                      ]
+    },
+    {
+        "output":  1679,
+        "oee":  91.18,
+        "interruptions":  [
+
+                          ],
+        "oeeTarget":  95,
+        "shiftName":  "2026-04-20 Morning",
+        "scrapRate":  0,
+        "verificationStatus":  "Verified by AI",
+        "fpy":  94.11,
+        "actions":  [
+                        {
+                            "reaction":  "Verify station 67002 sensor calibration.",
+                            "deviation":  "Quality Low (94.11%)"
+                        }
+                    ],
+        "partTypes":  [
+                          {
+                              "name":  "0986435316",
+                              "io":  134,
+                              "nio":  13,
+                              "fpy":  91.16
+                          },
+                          {
+                              "name":  "0445111199",
+                              "io":  1538,
+                              "nio":  81,
+                              "fpy":  95
+                          },
+                          {
+                              "name":  "0445111470",
+                              "io":  7,
+                              "nio":  11,
+                              "fpy":  38.89
+                          }
+                      ]
+    },
+    {
+        "output":  1901,
+        "oee":  90.39,
+        "interruptions":  [
+
+                          ],
+        "oeeTarget":  95,
+        "shiftName":  "2026-04-20 Afternoon",
+        "scrapRate":  0,
+        "verificationStatus":  "Verified by AI",
+        "fpy":  95.53,
+        "actions":  [
+
+                    ],
+        "partTypes":  [
+                          {
+                              "name":  "0445111247",
+                              "io":  282,
+                              "nio":  8,
+                              "fpy":  97.24
+                          },
+                          {
+                              "name":  "0445111231",
+                              "io":  874,
+                              "nio":  36,
+                              "fpy":  96.04
+                          },
+                          {
+                              "name":  "0445111235",
+                              "io":  745,
+                              "nio":  45,
+                              "fpy":  94.3
+                          }
+                      ]
+    },
+    {
+        "output":  1666,
+        "oee":  95.86,
+        "interruptions":  [
+
+                          ],
+        "oeeTarget":  95,
+        "shiftName":  "2026-04-19 Night",
+        "scrapRate":  0,
+        "verificationStatus":  "Verified by AI",
+        "fpy":  96.3,
+        "actions":  [
+
+                    ],
+        "partTypes":  {
+                          "name":  "0445111199",
+                          "io":  1666,
+                          "nio":  64,
+                          "fpy":  96.3
+                      }
+    },
+    {
+        "output":  2046,
+        "oee":  91.48,
+        "interruptions":  [
+
+                          ],
+        "oeeTarget":  95,
+        "shiftName":  "2026-04-19 Morning",
+        "scrapRate":  0,
+        "verificationStatus":  "Verified by AI",
+        "fpy":  95.65,
+        "actions":  [
+
+                    ],
+        "partTypes":  [
+                          {
+                              "name":  "0445111199",
+                              "io":  498,
+                              "nio":  10,
+                              "fpy":  98.03
+                          },
+                          {
+                              "name":  "0445111231",
+                              "io":  789,
+                              "nio":  40,
+                              "fpy":  95.17
+                          },
+                          {
+                              "name":  "0445111235",
+                              "io":  759,
+                              "nio":  43,
+                              "fpy":  94.64
+                          }
+                      ]
+    },
+    {
+        "output":  2867,
+        "oee":  89.52,
+        "interruptions":  [
+
+                          ],
+        "oeeTarget":  95,
+        "shiftName":  "2026-04-19 Afternoon",
+        "scrapRate":  0,
+        "verificationStatus":  "Verified by AI",
+        "fpy":  95.73,
+        "actions":  [
+                        {
+                            "reaction":  "Review shift startup bottleneck station throughput.",
+                            "deviation":  "Performance Low (89.52%)"
+                        }
+                    ],
+        "partTypes":  [
+                          {
+                              "name":  "0445111183",
+                              "io":  598,
+                              "nio":  33,
+                              "fpy":  94.77
+                          },
+                          {
+                              "name":  "044511113B",
+                              "io":  2269,
+                              "nio":  95,
+                              "fpy":  95.98
+                          }
+                      ]
+    }
+]
+;
+
+    const slider = document.getElementById('shift-slider');
+    const sliderLabel = document.getElementById('slider-label');
+    const mainContent = document.getElementById('main-content');
+    const globalStatus = document.getElementById('v-status');
+    let charts = [];
+
+    function destroyCharts() {
+        charts.forEach(chart => chart.destroy());
+        charts = [];
+    }
+
+    function getKpiClass(oee) {
+        if (oee < 85) return 'kpi-bad';
+        if (oee < 92) return 'kpi-warn';
+        return 'kpi-ok';
+    }
+
+    function renderShift(index) {
+        const data = reportData[index];
+        if (!data) return;
+
+        sliderLabel.textContent = data.shiftName;
+        globalStatus.textContent = data.verificationStatus || 'Verified by AI';
+        globalStatus.className = data.verificationStatus?.includes('Anomaly') ? 'font-bold text-red-600' : 'font-bold text-[#00884a]';
+        
+        destroyCharts();
+
+        mainContent.innerHTML = `
+            <!-- KPI ROW -->
+            <section>
+                <div class="section-title">Key Performance Indicators</div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="kpi-card ${getKpiClass(data.oee)} p-4 tooltip-trigger">
+                        <div class="text-[0.65rem] font-bold text-gray-500 uppercase tracking-wider">Performance (OEE)</div>
+                        <div class="text-3xl font-bold text-gray-900 mt-1">${data.oee}%</div>
+                        <div class="text-xs text-gray-500 mt-1">Target: ${data.oeeTarget || 'N/A'}%</div>
+                        <div class="tooltip">Formula: IO / TargetOEE100</div>
+                    </div>
+                    <div class="kpi-card ${data.fpy < 95 ? 'kpi-warn' : 'kpi-ok'} p-4 tooltip-trigger">
+                        <div class="text-[0.65rem] font-bold text-gray-500 uppercase tracking-wider">FPY (Quality)</div>
+                        <div class="text-3xl font-bold text-gray-900 mt-1">${data.fpy}%</div>
+                        <div class="text-xs text-gray-500 mt-1">NIO: ${data.output - (data.output * data.fpy / 100).toFixed(0)} pts</div>
+                        <div class="tooltip">Formula: IO / (IO + NIO)</div>
+                    </div>
+                    <div class="kpi-card kpi-info p-4">
+                        <div class="text-[0.65rem] font-bold text-gray-500 uppercase tracking-wider">Total Output (IO)</div>
+                        <div class="text-3xl font-bold text-gray-900 mt-1">${data.output.toLocaleString()}</div>
+                        <div class="text-xs text-gray-500 mt-1">Confirmed Good Parts</div>
+                    </div>
+                    <div class="kpi-card kpi-info p-4">
+                        <div class="text-[0.65rem] font-bold text-gray-500 uppercase tracking-wider">Scrap Rate</div>
+                        <div class="text-3xl font-bold text-gray-900 mt-1">${data.scrapRate}%</div>
+                        <div class="text-xs text-gray-500 mt-1">Irrecoverable Rejects</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CHARTS ROW -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 kpi-card p-6">
+                    <div class="section-title">Output Distribution by Part Type</div>
+                    <div class="h-[250px]"><canvas id="outputChart"></canvas></div>
+                </div>
+                <div class="kpi-card p-6">
+                    <div class="section-title">Downtime Breakdown (placeholder)</div>
+                    <div class="h-[200px] flex items-center justify-center"><canvas id="lossChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- LOGS -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="kpi-card p-6">
+                    <div class="section-title">Interruption Log (Last 5)</div>
+                    <div class="overflow-x-auto">
+                        <table>
+                            <thead><tr><th>Type</th><th>Min</th><th>Description</th></tr></thead>
+                            <tbody>
+                                ${data.interruptions?.map(i => `<tr><td><span class="badge-gray px-2 py-0.5 rounded-full text-[0.6rem] font-bold">${i.type}</span></td><td>${i.duration}</td><td>${i.desc}</td></tr>`).join('') || '<tr><td colspan="3">None</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="kpi-card p-6">
+                    <div class="section-title">AI Precision Analysis</div>
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 p-3 rounded text-xs border-l-4 border-blue-500">
+                            <strong>Verification Result:</strong> ${data.verificationStatus}
+                        </div>
+                        <table class="min-w-full mt-2">
+                            <thead><tr><th>Deviation</th><th>AI Action</th></tr></thead>
+                            <tbody>
+                                ${data.actions?.map(a => `<tr><td class="font-bold text-red-600">${a.deviation}</td><td>${a.reaction}</td></tr>`).join('') || '<tr><td colspan="2" class="text-green-600 font-bold text-center">No major deviations.</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        setTimeout(() => initCharts(data), 0);
+    }
+
+    function initCharts(data) {
+        const ctxOutput = document.getElementById('outputChart');
+        if (ctxOutput && data.partTypes) {
+            const chart = new Chart(ctxOutput, {
+                type: 'bar',
+                data: {
+                    labels: data.partTypes.map(p => p.name),
+                    datasets: [
+                        { label: 'IO', data: data.partTypes.map(p => p.io), backgroundColor: '#00884a' },
+                        { label: 'NIO', data: data.partTypes.map(p => p.nio), backgroundColor: '#ed0007' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { stacked: true }, y: { stacked: true } },
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
+                }
+            });
+            charts.push(chart);
+        }
+
+        const ctxLoss = document.getElementById('lossChart');
+        if (ctxLoss) {
+            const chart = new Chart(ctxLoss, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Technical', 'Organizational', 'Changeover'],
+                    datasets: [{ data: [3, 5, 2], backgroundColor: ['#ffcf00', '#007bc0', '#ed0007'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
+            });
+            charts.push(chart);
+        }
+    }
+
+    if (reportData.length > 0) {
+        slider.max = reportData.length - 1;
+        slider.value = reportData.length - 1;
+        slider.addEventListener('input', (e) => renderShift(e.target.value));
+        renderShift(slider.value);
+    }
+</script>
+</body>
+</html>
+
