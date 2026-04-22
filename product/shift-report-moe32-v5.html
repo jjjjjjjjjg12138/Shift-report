@@ -401,6 +401,11 @@
         return 'kpi-ok';
     }
 
+    function toArr(val) {
+        if (!val) return [];
+        return Array.isArray(val) ? val : [val];
+    }
+
     function renderShift(index) {
         const data = reportData[index];
         if (!data) return;
@@ -410,6 +415,12 @@
         globalStatus.className = data.verificationStatus?.includes('Anomaly') ? 'font-bold text-red-600' : 'font-bold text-[#00884a]';
         
         destroyCharts();
+
+        // Convert potential single-object results from PowerShell back to Arrays
+        data.lossPareto = toArr(data.lossPareto);
+        data.actions = toArr(data.actions);
+        data.partTypes = toArr(data.partTypes);
+        data.interruptions = toArr(data.interruptions);
 
         mainContent.innerHTML = `
             <!-- KPI ROW (MOE3.2 #1, #2, #9) -->
@@ -445,7 +456,7 @@
                 <div class="kpi-card p-6">
                     <div class="section-title">Loss Pareto Analysis (Top 3 Reasons)</div>
                     <div class="space-y-4">
-                        ${data.lossPareto && data.lossPareto.length > 0 
+                        ${data.lossPareto.length > 0 
                             ? data.lossPareto.map((l, i) => `
                                 <div class="flex items-center gap-4">
                                     <div class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-sm">${i+1}</div>
@@ -483,7 +494,9 @@ ${data.handoverDraft || 'Generating draft...'}
                         <table>
                             <thead><tr><th>Deviation</th><th>Reaction Action</th></tr></thead>
                             <tbody>
-                                ${data.actions?.map(a => `<tr><td class="font-bold text-red-600 text-xs">${a.deviation}</td><td class="text-xs">${a.reaction}</td></tr>`).join('') || '<tr><td colspan="2" class="text-green-600 font-bold text-center text-xs py-4">Status Stable.</td></tr>'}
+                                ${data.actions.length > 0
+                                    ? data.actions.map(a => `<tr><td class="font-bold text-red-600 text-xs">${a.deviation}</td><td class="text-xs">${a.reaction}</td></tr>`).join('') 
+                                    : '<tr><td colspan="2" class="text-green-600 font-bold text-center text-xs py-4">Status Stable.</td></tr>'}
                             </tbody>
                         </table>
                     </div>
@@ -497,15 +510,17 @@ ${data.handoverDraft || 'Generating draft...'}
                     <table class="min-w-full">
                         <thead><tr><th>Part Number</th><th>IO (Good)</th><th>NIO (Reject)</th><th>FPY %</th><th>Status</th></tr></thead>
                         <tbody>
-                            ${data.partTypes?.map(p => `
-                                <tr>
-                                    <td class="font-mono font-bold">${p.name}</td>
-                                    <td>${p.io}</td>
-                                    <td>${p.nio}</td>
-                                    <td class="font-bold ${p.fpy < 95 ? 'text-red-600' : 'text-green-600'}">${p.fpy}%</td>
-                                    <td><span class="${p.fpy < 95 ? 'badge-warn' : 'badge-ok'} px-2 py-0.5 rounded text-[0.6rem] font-bold">${p.fpy < 95 ? 'Check' : 'OK'}</span></td>
-                                </tr>
-                            `).join('') || '<tr><td colspan="5">No data.</td></tr>'}
+                            ${data.partTypes.length > 0
+                                ? data.partTypes.map(p => `
+                                    <tr>
+                                        <td class="font-mono font-bold">${p.name}</td>
+                                        <td>${p.io}</td>
+                                        <td>${p.nio}</td>
+                                        <td class="font-bold ${p.fpy < 95 ? 'text-red-600' : 'text-green-600'}">${p.fpy}%</td>
+                                        <td><span class="${p.fpy < 95 ? 'badge-warn' : 'badge-ok'} px-2 py-0.5 rounded text-[0.6rem] font-bold">${p.fpy < 95 ? 'Check' : 'OK'}</span></td>
+                                    </tr>
+                                `).join('') 
+                                : '<tr><td colspan="5">No data.</td></tr>'}
                         </tbody>
                     </table>
                 </div>
