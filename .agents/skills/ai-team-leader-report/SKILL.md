@@ -1,64 +1,73 @@
 ---
 name: ai-team-leader-report
-description: Generates a professional, interactive Bosch-branded shift report for Team Leaders using production data from MES. Features 72-hour interactive sliding window, visual KPI analytics (OEE, FPY), and AI-generated corrective actions.
-version: 3.0
+description: Generates a professional, interactive Bosch-branded shift report for Team Leaders using production data from MES. Features 72-hour interactive sliding window, visual KPI analytics (OEE, FPY), and AI-generated corrective actions. Includes v4.0 Precision Verification Logic.
+version: 4.0
 author: Gemini CLI / AI Associate Team
 requirements:
   - Data Provider: Access to MES PdaMda API (e.g., GetShiftbookData, GetInterruptions endpoints)
   - Design Tokens: Bosch brand guidelines (fonts: Bosch Sans, colors: Bosch Blue #005691)
 ---
 
-# AI Team Leader Report Generator (Universal v3.0)
+# AI Team Leader Report Generator (v4.0 Precision)
 
 ## Overview
-This skill guides any AI agent (Claude, Gemini, Codex) to orchestrate the creation of a production-grade shift analysis dashboard. It abstracts platform-specific tool names into primitive actions: **Read**, **Write**, **Bash**, and **HttpCall**.
+This skill guides any AI agent (Claude, Gemini, Codex) to orchestrate the creation of a production-grade shift analysis dashboard with built-in mathematical verification and data anomaly detection.
 
-## 1. Prerequisites (Capability Check)
-Before starting, ensure you have access to:
-1.  **MES API Provider**: A way to query production data for the target line (e.g., `l1092`).
-2.  **Report Template**: A file named `template.html` located in the same directory as this skill.
+## 1. Mathematical Standards (Truth Source)
+Ensure all KPIs are calculated using these exact Bosch-aligned formulas:
+- **Total Parts Produced**: `CountIO + CountNIOSum`
+- **FPY (First Pass Yield) %**: `(CountIO / Total Parts Produced) * 100`
+- **Scrap Rate %**: `(CountScrap / Total Parts Produced) * 100`
+- **Performance %**: `(CountIO / CountTargetOee100) * 100`
+- **OEE (Simplified %)**: Same as Performance % (unless multi-factor data is available).
 
 ## 2. Execution Protocol
 
 ### Step A: Data Discovery
 1.  **Retrieve Recent Production History**:
-    - Use your **HttpCall** or **Bash** capability to fetch the last 72 hours of production records (`GetShiftbookData`) for the target line.
+    - Fetch the last 72 hours of production records (`GetShiftbookData`) for the target line.
     - Identify the timestamp of the *last active shift* with data.
 2.  **Fetch Interruptions**:
     - Fetch downtime/interruption events (`GetInterruptions`) for the same 72-hour window.
 
-### Step B: Data Synthesis & Schema Mapping
-Transform the raw API response into a JSON array that matches the following contract:
+### Step B: Precision Processing & Verification
+Before generating the final JSON, perform a **Verification Check**:
+1.  **Cross-Sum Check**: Does the sum of `IO` and `NIO` across all `PartTypes` equal the total `Shift IO` and `Shift NIO`?
+2.  **Anomaly Detection**:
+    - If `OEE > 110%` -> Mark as "Data Anomaly: Potential Target Misconfiguration".
+    - If `Target == 0` -> Mark KPI as "No Target Data".
+    - If `Total Parts == 0` -> Mark KPI as "Downtime / No Production".
 
+### Step C: JSON Schema Mapping
 ```json
 [
   {
     "shiftName": "YYYY-MM-DD (Morning|Afternoon|Night)",
-    "oee": "float (0-100)",
-    "output": "integer (Good parts)",
-    "scrapRate": "float (0-100)",
+    "verificationStatus": "Verified by AI | Data Anomaly | Incomplete Data",
+    "oee": "float",
+    "oeeTarget": "float",
+    "output": "integer",
+    "scrapRate": "float",
+    "fpy": "float",
     "partTypes": [
-      { "name": "Part Number", "io": "integer", "nio": "integer" }
+      { "name": "Part Number", "io": "integer", "nio": "integer", "fpy": "float" }
     ],
     "interruptions": [
       { "type": "String", "duration": "integer (min)", "desc": "String" }
     ],
     "actions": [
-      { "deviation": "KPI alert", "reaction": "Suggested corrective step", "owner": "Role" }
+      { "deviation": "String", "reaction": "String", "owner": "String" }
     ]
   }
 ]
 ```
-**AI Reasoning Logic**:
-- If `oee < 90%` -> Add action item for "Performance Deviation".
-- If `scrapRate > 5%` -> Add action item for "Quality Deviation".
 
-### Step C: UI Assembly
+### Step D: UI Assembly
 1.  **Read** the `template.html` asset from this skill's directory.
 2.  **Write** the final report:
-    - Replace the marker `/* INJECT_DATA_HERE */ []` in the template with your generated JSON array (sorted descending by date).
-    - Save the output to a file named `product/shift-report-v3.html` (or a location requested by the user).
+    - Replace the marker `/* INJECT_DATA_HERE */ []` in the template with your verified JSON array.
+    - Save the output to `product/shift-report-v4.html`.
 
 ## 3. Completion
-- Confirm the file path of the generated report.
-- Do not output the raw HTML or JSON in the chat unless specifically asked.
+- Confirm the file path.
+- State whether any data anomalies were detected during the verification step.
